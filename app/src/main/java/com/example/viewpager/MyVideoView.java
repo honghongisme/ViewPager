@@ -9,6 +9,7 @@ public class MyVideoView extends VideoView {
 
     private Context mContext;
     private boolean mPrepared;
+    private boolean mCompleted;
     private OnVideoRendringListener mListener;
 
     public MyVideoView(Context context) {
@@ -44,6 +45,13 @@ public class MyVideoView extends VideoView {
                 });
             }
         });
+        setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                System.out.println("播放结束");
+                mCompleted = true;
+            }
+        });
     }
 
     public void setOnVideoRendringListener(OnVideoRendringListener listener) {
@@ -53,6 +61,10 @@ public class MyVideoView extends VideoView {
 
     public boolean isPrepared() {
         return mPrepared;
+    }
+
+    public boolean isCompleted() {
+        return mCompleted;
     }
 
     interface OnVideoRendringListener {
