@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
+import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +65,16 @@ public class MainActivity extends AppCompatActivity {
                     index = 1;
                 }
                 final View view = mViewPager.getChildAt(index);
+               ViewGroup vg =  view.findViewById(R.id.video_container);
+               //取到播放view
+                //添加到vg里面
+                //设置播放地址
+                //preparer
+                //隐藏图片
+                //播放
+                //结束。。释放view 继续轮播
+
+
                 if (view instanceof MyVideoView) {
                     new Thread(new Runnable() {
                         @Override
@@ -111,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
         PageBean pageBean2 = new PageBean("video1", 1);
         PageBean pageBean3 = new PageBean("video2", 1);
         PageBean pageBean4 = new PageBean("image2", 0);
+
         mData.add(pageBean1);
         mData.add(pageBean2);
         mData.add(pageBean3);
