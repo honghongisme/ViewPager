@@ -2,16 +2,16 @@ package com.example.viewpager;
 
 public class PageBean {
 
-    private String resName;
+    private String url;
     private int Type;
 
     public PageBean(String resName, int type) {
-        this.resName = resName;
+        this.url = resName;
         Type = type;
     }
 
-    public String getResName() {
-        return resName;
+    public String getUrl() {
+        return url;
     }
 
 
