@@ -8,12 +8,15 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.example.viewpager.Constans.DATA_TYPE_VIDEO;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,6 +27,10 @@ public class MainActivity extends AppCompatActivity {
     private List<PageBean> mData;
     private VideoBannerManager mManager;
     private BannerOnPageChangeListener mPageChangeListener;
+
+    private boolean mDown, mFlag;
+    private int mItemPositionBeforeSpringBack;
+    private int mVideoProgress;
 
     @SuppressLint("HandlerLeak")
     private Handler mHandler = new Handler() {
@@ -56,9 +63,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initData() {
-
-
-
         PageBean pageBean1 = new PageBean("image1", 0);
         PageBean pageBean2 = new PageBean("https://mp4.vjshi.com/2018-04-07/66101cfce535738b4aab42d669815423.mp4", 1);
         PageBean pageBean3 = new PageBean("https://mp4.vjshi.com/2018-10-14/c1493d464e6c91401172449c068b530a.mp4", 1);
@@ -74,27 +78,48 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * 切换下一屏
-     * @return 下一屏的position
      */
-    private int switchNext() {
+    private void switchNext() {
         System.out.println("switch");
         int currentItem = mViewPager.getCurrentItem();
         int toItem = currentItem + 1;
         if (toItem < mData.size()) {
             mViewPager.setCurrentItem(toItem, true);
         }
-        return toItem;
     }
 
     class BannerOnPageChangeListener implements ViewPager.OnPageChangeListener {
 
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            System.out.println("onPageScrolled = (" + positionOffset + ", " + positionOffsetPixels + ")");
+            PageBean pageBean = mData.get(position);
+            if (mDown && (pageBean.getType() == DATA_TYPE_VIDEO)) {
+                if (positionOffsetPixels == 0) {
 
+                    mDown = false;
+                    mFlag = false;
+                    if (mItemPositionBeforeSpringBack == mViewPager.getCurrentItem()) { // 松开回弹
+                        //回到本页 继续播放
+                        mManager.seekTo(mVideoProgress);
+                    }
+                } else {
+                    // 只要移动了
+                    // 长按滑动按下  第一次
+                    if (!mFlag) { // 第一次总能运行
+                        mManager.pause();
+                        mHandler.removeCallbacksAndMessages(null);
+                        mItemPositionBeforeSpringBack = position;
+                        mVideoProgress = mManager.getCuurentPosition();
+                        mFlag = true;
+                    }
+                }
+            }
         }
 
         @Override
-        public void onPageSelected(int position) {
+        public void onPageSelected(final int position) {
+            mHandler.removeCallbacksAndMessages(null);
             System.out.println("onPageSelected = " + position);
             View view = mViewPager.findViewWithTag(mViewPager.getCurrentItem());
             PageBean pageBean = mData.get(position);
@@ -105,11 +130,24 @@ public class MainActivity extends AppCompatActivity {
                 ImageView imageView = view.findViewById(R.id.image);
                 imageView.setImageResource(getApplicationContext().getResources().getIdentifier(pageBean.getUrl(), "drawable", "com.example.viewpager"));
                 mHandler.sendEmptyMessageDelayed(SWITCH_TO_NEXT, IMAGE_SHOW_TIME);
-            } else if (pageBean.getType() == Constans.DATA_TYPE_VIDEO) {
-                FrameLayout layout = view.findViewById(R.id.video_container);
+            } else if (pageBean.getType() == DATA_TYPE_VIDEO) {
+                view.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        System.out.println("onTouch");
+                        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                            mDown = true;
+                        }
+                        return true;
+                    }
+                });
+                FrameLayout videoContainer = view.findViewById(R.id.video_container);
+                final ImageView imageView = view.findViewById(R.id.image);
+                if (imageView.getVisibility() == View.INVISIBLE) {
+                    imageView.setVisibility(View.VISIBLE);
+                }
                 IVideoAbleView videoView = mManager.getView();
                 mManager.setNetworkUri(pageBean.getUrl());
-                mManager.setBackgroundResource(R.drawable.loading);
                 mManager.setStatusCallback(new VideoStatusCallback() {
                     @Override
                     public void onPrepared() {
@@ -119,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onRender() {
-                        mManager.setBackgroundNull();
+                        imageView.setVisibility(View.INVISIBLE);
                         System.out.println("onRender");
                     }
 
@@ -136,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onComplete() {
                         System.out.println("onComplete");
-      //                  mHandler.sendEmptyMessage(SWITCH_TO_NEXT);
+                        mHandler.sendEmptyMessage(SWITCH_TO_NEXT);
                     }
 
                     @Override
@@ -145,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
                 FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
-                layout.addView((View) videoView, layoutParams);
+                videoContainer.addView((View) videoView, layoutParams);
             }
         }
 

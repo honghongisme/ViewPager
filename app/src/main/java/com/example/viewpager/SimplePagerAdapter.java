@@ -1,7 +1,9 @@
 package com.example.viewpager;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -42,6 +44,14 @@ public class SimplePagerAdapter extends PagerAdapter {
         }
         if (view != null) {
             view.setTag(position);
+            view.setOnTouchListener(new View.OnTouchListener() {
+                @SuppressLint("ClickableViewAccessibility")
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+
+                    return false;
+                }
+            });
         }
         container.addView(view);
         return view;
