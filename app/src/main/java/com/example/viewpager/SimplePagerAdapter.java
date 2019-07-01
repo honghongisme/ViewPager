@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.viewpager.widget.PagerAdapter;
@@ -39,6 +40,8 @@ public class SimplePagerAdapter extends PagerAdapter {
         View view = null;
         if (pageBean.getType() == Constans.DATA_TYPE_IMAGE ) {
             view = LayoutInflater.from(mContext).inflate(R.layout.image_page, container, false);
+            ImageView imageView = view.findViewById(R.id.image);
+            imageView.setImageResource(mContext.getResources().getIdentifier(pageBean.getUrl(), "drawable", "com.example.viewpager"));
         } else if (pageBean.getType() == Constans.DATA_TYPE_VIDEO) {
             view = LayoutInflater.from(mContext).inflate(R.layout.video_banner, container, false);
         }

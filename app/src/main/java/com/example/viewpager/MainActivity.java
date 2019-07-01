@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean mDown, mFlag;
     private int mItemPositionBeforeSpringBack;
+
     private int mVideoProgress;
 
     @SuppressLint("HandlerLeak")
@@ -92,25 +93,28 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-            System.out.println("onPageScrolled = (" + positionOffset + ", " + positionOffsetPixels + ")");
-            PageBean pageBean = mData.get(position);
+  //          System.out.println("onPageScrolled = (" + positionOffset + ", " + positionOffsetPixels + ")");
+            PageBean pageBean = mData.get(mViewPager.getCurrentItem());
+   //         System.out.println("positionOffset = " + positionOffset + "    mDown = " + mDown + "     pageBean.getType() == DATA_TYPE_VIDEO ->" + (pageBean.getType() == DATA_TYPE_VIDEO));
             if (mDown && (pageBean.getType() == DATA_TYPE_VIDEO)) {
                 if (positionOffsetPixels == 0) {
-
-                    mDown = false;
-                    mFlag = false;
-                    if (mItemPositionBeforeSpringBack == mViewPager.getCurrentItem()) { // 松开回弹
+                    System.out.println("mItemPositionBeforeSpringBack = " + mItemPositionBeforeSpringBack);
+                    if (mFlag && mItemPositionBeforeSpringBack == mViewPager.getCurrentItem()) { // 松开回弹
+                        System.out.println("回到本页 继续播放 mVideoProgress = " + mVideoProgress);
                         //回到本页 继续播放
                         mManager.seekTo(mVideoProgress);
+                        mManager.start();
                     }
+                    mDown = false;
+                    mFlag = false;
                 } else {
-                    // 只要移动了
-                    // 长按滑动按下  第一次
-                    if (!mFlag) { // 第一次总能运行
+                    // 拖拽按下  一次拖拽只执行一次
+                    if (!mFlag) {
                         mManager.pause();
-                        mHandler.removeCallbacksAndMessages(null);
-                        mItemPositionBeforeSpringBack = position;
                         mVideoProgress = mManager.getCuurentPosition();
+                        System.out.println("拖拽按下 mVideoProgress = " + mVideoProgress + "    mItemPositionBeforeSpringBack = " + mViewPager.getCurrentItem());
+                        mHandler.removeCallbacksAndMessages(null);
+                        mItemPositionBeforeSpringBack = mViewPager.getCurrentItem();
                         mFlag = true;
                     }
                 }
@@ -127,15 +131,15 @@ public class MainActivity extends AppCompatActivity {
                 if (mManager.isExistView()) {
                     mManager.stop();
                 }
-                ImageView imageView = view.findViewById(R.id.image);
-                imageView.setImageResource(getApplicationContext().getResources().getIdentifier(pageBean.getUrl(), "drawable", "com.example.viewpager"));
+        /*        ImageView imageView = view.findViewById(R.id.image);
+                imageView.setImageResource(getApplicationContext().getResources().getIdentifier(pageBean.getUrl(), "drawable", "com.example.viewpager"));*/
                 mHandler.sendEmptyMessageDelayed(SWITCH_TO_NEXT, IMAGE_SHOW_TIME);
             } else if (pageBean.getType() == DATA_TYPE_VIDEO) {
                 view.setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent event) {
-                        System.out.println("onTouch");
                         if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                            System.out.println("down");
                             mDown = true;
                         }
                         return true;
@@ -174,6 +178,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onComplete() {
                         System.out.println("onComplete");
+                        imageView.setVisibility(View.VISIBLE);
                         mHandler.sendEmptyMessage(SWITCH_TO_NEXT);
                     }
 
