@@ -1,4 +1,4 @@
-package com.example.viewpager;
+package com.example.viewpager.play;
 
 public class PageBean {
 

@@ -1,4 +1,4 @@
-package com.example.viewpager;
+package com.example.viewpager.play;
 
 public interface VideoStatusCallback {
     //准备成功回调

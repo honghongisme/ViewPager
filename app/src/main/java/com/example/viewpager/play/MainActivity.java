@@ -1,4 +1,4 @@
-package com.example.viewpager;
+package com.example.viewpager.play;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,10 +13,12 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import com.example.viewpager.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.viewpager.Constans.DATA_TYPE_VIDEO;
+import static com.example.viewpager.play.Constans.DATA_TYPE_VIDEO;
 
 public class MainActivity extends AppCompatActivity {
 

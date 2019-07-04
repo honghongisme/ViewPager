@@ -1,4 +1,4 @@
-package com.example.viewpager;
+package com.example.viewpager.play;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

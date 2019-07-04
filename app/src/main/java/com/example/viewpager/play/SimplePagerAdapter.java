@@ -1,4 +1,4 @@
-package com.example.viewpager;
+package com.example.viewpager.play;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -10,6 +10,8 @@ import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.viewpager.widget.PagerAdapter;
+
+import com.example.viewpager.R;
 
 import java.util.List;
 

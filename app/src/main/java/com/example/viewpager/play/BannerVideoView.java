@@ -1,4 +1,4 @@
-package com.example.viewpager;
+package com.example.viewpager.play;
 
 import android.content.Context;
 import android.media.MediaPlayer;
