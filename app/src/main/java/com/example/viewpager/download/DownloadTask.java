@@ -1,13 +1,16 @@
 package com.example.viewpager.download;
 
 
-import com.example.viewpager.download.enties.Advertise;
-import com.example.viewpager.download.enties.DownloadInfo;
+import com.example.viewpager.download.entity.Advertise;
+import com.example.viewpager.download.entity.DownloadInfo;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -15,39 +18,41 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static com.example.viewpager.download.util.FileUtil.getExternalStoragePath;
-
-
-public class DownloadTask implements Runnable {
+public class DownloadTask implements Runnable, OnDownloadListener{
 
     private OkHttpClient mClient;
     private DownloadInfo mDownloadInfo;
-    private OnDownloadListener mListener;
+    private Set<WeakReference<OnDownloadListener>> mListeners=new LinkedHashSet<>();
+    private String mDownloadPath;
 
 
-    public DownloadTask(DownloadInfo info, OnDownloadListener onDownloadListener) {
+    public DownloadTask(DownloadInfo info, String downloadPath, OnDownloadListener onDownloadListener) {
         mClient = new OkHttpClient.Builder().build();
         mDownloadInfo = info;
-        mListener = onDownloadListener;
+        mListeners.add(onDownloadListener);
+        mDownloadPath = downloadPath;
+    }
+
+    public void addListener(OnDownloadListener listener){
+        mListeners.add(listener);
     }
 
     @Override
     public void run() {
         Request request = new Request.Builder().url(mDownloadInfo.getUrl()).build();
-        mListener.onStart();
+        onStart();
         mClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                mListener.onFailed();
+                onFailed();
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.body() != null) {
                     InputStream inputStream = response.body().byteStream();
-                    String path = getExternalStoragePath(mDownloadInfo.getUrl());
-                    mDownloadInfo.setPath(path);
-                    File file = new File(path);
+                    mDownloadInfo.setPath(mDownloadPath);
+                    File file = new File(mDownloadPath);
                     FileOutputStream outputStream = new FileOutputStream(file);
                     long total = response.body().contentLength();
                     int len;
@@ -57,18 +62,46 @@ public class DownloadTask implements Runnable {
                         outputStream.write(buf, 0, len);
                         sum += len;
                         int progress = (int) (sum/total);
-                        mListener.onProgress(progress);
+                      onProgress(progress);
                     }
                     // 下载完成
                     outputStream.close();
                     inputStream.close();
+                    mDownloadInfo.setProgress(sum);
                     mDownloadInfo.setState(1);
                     Advertise advertise = new Advertise();
                     advertise.setUrl(mDownloadInfo.getUrl());
-                    advertise.setPath(path);
-                    mListener.onFinished(advertise);
+                    advertise.setPath(mDownloadPath);
+                    onFinished(advertise);
                 }
             }
         });
+    }
+
+    @Override
+    public void onFailed() {
+        for (OnDownloadListener listener:mListeners) {
+            listener.onFailed();
+        }
+    }
+
+    @Override
+    public void onStart() {
+
+    }
+
+    @Override
+    public void onPause() {
+
+    }
+
+    @Override
+    public void onProgress(int progress) {
+
+    }
+
+    @Override
+    public void onFinished(Advertise advertise) {
+
     }
 }

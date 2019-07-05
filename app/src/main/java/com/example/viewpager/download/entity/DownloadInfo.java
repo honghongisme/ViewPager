@@ -1,4 +1,4 @@
-package com.example.viewpager.download.enties;
+package com.example.viewpager.download.entity;
 
 public class DownloadInfo {
 
@@ -13,6 +13,16 @@ public class DownloadInfo {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    @Override
+    public String toString() {
+        return "DownloadInfo{" +
+                "url='" + url + '\'' +
+                ", path='" + path + '\'' +
+                ", state=" + state +
+                ", progress=" + progress +
+                '}';
     }
 
     public String getPath() {

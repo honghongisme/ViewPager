@@ -40,23 +40,15 @@ public class SimplePagerAdapter extends PagerAdapter {
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
         PageBean pageBean = mData.get(position);
         View view = null;
-        if (pageBean.getType() == Constans.DATA_TYPE_IMAGE ) {
+        if (pageBean.getType() == Constants.DATA_TYPE_IMAGE ) {
             view = LayoutInflater.from(mContext).inflate(R.layout.image_page, container, false);
             ImageView imageView = view.findViewById(R.id.image);
-            imageView.setImageResource(mContext.getResources().getIdentifier(pageBean.getUrl(), "drawable", "com.example.viewpager"));
-        } else if (pageBean.getType() == Constans.DATA_TYPE_VIDEO) {
+            imageView.setImageResource(mContext.getResources().getIdentifier(pageBean.getPath(), "drawable", "com.example.viewpager"));
+        } else if (pageBean.getType() == Constants.DATA_TYPE_VIDEO) {
             view = LayoutInflater.from(mContext).inflate(R.layout.video_banner, container, false);
         }
         if (view != null) {
             view.setTag(position);
-            view.setOnTouchListener(new View.OnTouchListener() {
-                @SuppressLint("ClickableViewAccessibility")
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-
-                    return false;
-                }
-            });
         }
         container.addView(view);
         return view;

@@ -1,6 +1,6 @@
 package com.example.viewpager.download;
 
-import com.example.viewpager.download.enties.Advertise;
+import com.example.viewpager.download.entity.Advertise;
 
 public interface OnDownloadListener {
 

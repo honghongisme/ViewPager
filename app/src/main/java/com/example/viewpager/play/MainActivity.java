@@ -10,30 +10,35 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.example.viewpager.R;
+import com.example.viewpager.download.entity.Advertise;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.viewpager.play.Constans.DATA_TYPE_VIDEO;
+import static com.example.viewpager.play.Constants.DATA_TYPE_VIDEO;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MainContract.View{
 
     private static final int SWITCH_TO_NEXT = 0;
     private static final int IMAGE_SHOW_TIME = 3000;
 
     private ViewPager mViewPager;
     private List<PageBean> mData;
+    private List<String> mUrls;
     private VideoBannerManager mManager;
     private BannerOnPageChangeListener mPageChangeListener;
+    private MainPresenterImpl mPresenter;
 
     private boolean mDown, mFlag;
     private int mItemPositionBeforeSpringBack;
-
     private int mVideoProgress;
+
+    private boolean mIsWaitingDownload;
 
     @SuppressLint("HandlerLeak")
     private Handler mHandler = new Handler() {
@@ -54,11 +59,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initData();
+        mPresenter = new MainPresenterImpl(this);
+        mPresenter.loadData(mUrls);
+
         mViewPager = findViewById(R.id.view_page);
-        mData = new ArrayList<>();
         mManager = VideoBannerManager.getInstance(this);
 
-        initData();
         SimplePagerAdapter adapter = new SimplePagerAdapter(mData, this);
         mPageChangeListener = new BannerOnPageChangeListener();
         mViewPager.setAdapter(adapter);
@@ -67,16 +74,22 @@ public class MainActivity extends AppCompatActivity {
 
     private void initData() {
         PageBean pageBean1 = new PageBean("image1", 0);
-        PageBean pageBean2 = new PageBean("https://mp4.vjshi.com/2018-04-07/66101cfce535738b4aab42d669815423.mp4", 1);
-        PageBean pageBean3 = new PageBean("https://mp4.vjshi.com/2018-10-14/c1493d464e6c91401172449c068b530a.mp4", 1);
+        PageBean pageBean2 = new PageBean(null, 1);
+        PageBean pageBean3 = new PageBean(null, 1);
         /*PageBean pageBean2 = new PageBean("video2", 1);
         PageBean pageBean3 = new PageBean("video1", 1);*/
         PageBean pageBean4 = new PageBean("image2", 0);
 
+        mData = new ArrayList<>();
         mData.add(pageBean1);
         mData.add(pageBean2);
         mData.add(pageBean3);
         mData.add(pageBean4);
+
+        mUrls = new ArrayList<>();
+        mUrls.add("https://mp4.vjshi.com/2018-04-07/66101cfce535738b4aab42d669815423.mp4");
+        mUrls.add("https://mp4.vjshi.com/2018-10-14/c1493d464e6c91401172449c068b530a.mp4");
+
     }
 
     /**
@@ -88,6 +101,20 @@ public class MainActivity extends AppCompatActivity {
         int toItem = currentItem + 1;
         if (toItem < mData.size()) {
             mViewPager.setCurrentItem(toItem, true);
+        }
+    }
+
+    @Override
+    public void addPlay(Advertise advertise) {
+        for (PageBean pageBean : mData) {
+            if (pageBean.getType() == DATA_TYPE_VIDEO && pageBean.getPath() == null) {
+                pageBean.setPath(advertise.getPath());
+                break;
+            }
+        }
+        if (mIsWaitingDownload) {
+            mPageChangeListener.onPageSelected(mViewPager.getCurrentItem());
+            mIsWaitingDownload = false;
         }
     }
 
@@ -129,12 +156,12 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("onPageSelected = " + position);
             View view = mViewPager.findViewWithTag(mViewPager.getCurrentItem());
             PageBean pageBean = mData.get(position);
-            if (pageBean.getType() == Constans.DATA_TYPE_IMAGE) {
+            if (pageBean.getType() == Constants.DATA_TYPE_IMAGE) {
                 if (mManager.isExistView()) {
                     mManager.stop();
                 }
         /*        ImageView imageView = view.findViewById(R.id.image);
-                imageView.setImageResource(getApplicationContext().getResources().getIdentifier(pageBean.getUrl(), "drawable", "com.example.viewpager"));*/
+                imageView.setImageResource(getApplicationContext().getResources().getIdentifier(pageBean.getPath(), "drawable", "com.example.viewpager"));*/
                 mHandler.sendEmptyMessageDelayed(SWITCH_TO_NEXT, IMAGE_SHOW_TIME);
             } else if (pageBean.getType() == DATA_TYPE_VIDEO) {
                 view.setOnTouchListener(new View.OnTouchListener() {
@@ -153,44 +180,12 @@ public class MainActivity extends AppCompatActivity {
                     imageView.setVisibility(View.VISIBLE);
                 }
                 IVideoAbleView videoView = mManager.getView();
-                mManager.setNetworkUri(pageBean.getUrl());
-                mManager.setStatusCallback(new VideoStatusCallback() {
-                    @Override
-                    public void onPrepared() {
-                        mManager.start();
-                        System.out.println("onPrepared");
-                    }
-
-                    @Override
-                    public void onRender() {
-                        imageView.setVisibility(View.INVISIBLE);
-                        System.out.println("onRender");
-                    }
-
-                    @Override
-                    public void onPlay() {
-                        System.out.println("onPlay");
-                    }
-
-                    @Override
-                    public void onProgress(int progress) {
-                        System.out.println("onProgress");
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        System.out.println("onComplete");
-                        imageView.setVisibility(View.VISIBLE);
-                        mHandler.sendEmptyMessage(SWITCH_TO_NEXT);
-                    }
-
-                    @Override
-                    public void onRelease() {
-                        System.out.println("onRelease");
-                    }
-                });
-                FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
-                videoContainer.addView((View) videoView, layoutParams);
+                if (pageBean.getPath() != null) { // 下载完成
+                    mManager.setNetworkUri(pageBean.getPath());
+                    setVideoView(imageView, videoContainer, (View) videoView);
+                } else { // 正在下载
+                    mIsWaitingDownload = true;
+                }
             }
         }
 
@@ -198,6 +193,46 @@ public class MainActivity extends AppCompatActivity {
         public void onPageScrollStateChanged(int state) {
 
         }
+    }
+
+    public void setVideoView(final ImageView placeHolder, ViewGroup videoContainer, View videoView) {
+        mManager.setStatusCallback(new VideoStatusCallback() {
+            @Override
+            public void onPrepared() {
+                mManager.start();
+                System.out.println("onPrepared");
+            }
+
+            @Override
+            public void onRender() {
+                placeHolder.setVisibility(View.INVISIBLE);
+                System.out.println("onRender");
+            }
+
+            @Override
+            public void onPlay() {
+                System.out.println("onPlay");
+            }
+
+            @Override
+            public void onProgress(int progress) {
+                System.out.println("onProgress");
+            }
+
+            @Override
+            public void onComplete() {
+                System.out.println("onComplete");
+                placeHolder.setVisibility(View.VISIBLE);
+                mHandler.sendEmptyMessage(SWITCH_TO_NEXT);
+            }
+
+            @Override
+            public void onRelease() {
+                System.out.println("onRelease");
+            }
+        });
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
+        videoContainer.addView(videoView, layoutParams);
     }
 
     @Override
@@ -223,5 +258,3 @@ public class MainActivity extends AppCompatActivity {
         mManager.release();
     }
 }
-
-

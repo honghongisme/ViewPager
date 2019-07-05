@@ -2,21 +2,24 @@ package com.example.viewpager.play;
 
 public class PageBean {
 
-    private String url;
-    private int Type;
+    private String path;
+    private int type;
 
     public PageBean(String resName, int type) {
-        this.url = resName;
-        Type = type;
+        this.path = resName;
+        this.type = type;
     }
 
-    public String getUrl() {
-        return url;
+    public String getPath() {
+        return path;
     }
 
 
     public int getType() {
-        return Type;
+        return type;
     }
 
+    public void setPath(String path) {
+        this.path = path;
+    }
 }

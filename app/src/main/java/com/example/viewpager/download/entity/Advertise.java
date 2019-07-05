@@ -1,4 +1,4 @@
-package com.example.viewpager.download.enties;
+package com.example.viewpager.download.entity;
 
 public class Advertise {
 
@@ -19,5 +19,13 @@ public class Advertise {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    @Override
+    public String toString() {
+        return "Advertise{" +
+                "url='" + url + '\'' +
+                ", path='" + path + '\'' +
+                '}';
     }
 }
