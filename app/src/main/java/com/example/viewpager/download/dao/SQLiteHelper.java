@@ -4,10 +4,13 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-public class SQLiteHelper extends SQLiteOpenHelper {
+import static com.example.viewpager.download.dao.DownloadInfoDao.DOWNLOAD_PATH;
+import static com.example.viewpager.download.dao.DownloadInfoDao.DOWNLOAD_PROGRESS;
+import static com.example.viewpager.download.dao.DownloadInfoDao.DOWNLOAD_STATE;
+import static com.example.viewpager.download.dao.DownloadInfoDao.DOWNLOAD_URL;
+import static com.example.viewpager.download.dao.DownloadInfoDao.TABLE_NAME;
 
-    private static final String DB_NAME = "video_db";
-    private static final String TABLE_NAME = "video_download_info";
+public class SQLiteHelper extends SQLiteOpenHelper {
 
     public SQLiteHelper(@androidx.annotation.Nullable Context context, @androidx.annotation.Nullable String name, @androidx.annotation.Nullable SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
@@ -15,8 +18,11 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String sql = "create table if not exists " + TABLE_NAME + "(url varchar(200) primary key, " +
-                "state int, progress int, path varchar(200))";
+        String sql = "create table if not exists " + TABLE_NAME + "(" +
+                DOWNLOAD_URL + " varchar(200) primary key, " +
+                DOWNLOAD_STATE + " int default 0, " +
+                DOWNLOAD_PROGRESS + " int default 0, " +
+                DOWNLOAD_PATH + " varchar(200))";
         db.execSQL(sql);
     }
 

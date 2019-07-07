@@ -1,6 +1,5 @@
 package com.example.viewpager.download;
 
-
 import com.example.viewpager.download.entity.Advertise;
 import com.example.viewpager.download.entity.DownloadInfo;
 
@@ -22,19 +21,19 @@ public class DownloadTask implements Runnable, OnDownloadListener{
 
     private OkHttpClient mClient;
     private DownloadInfo mDownloadInfo;
-    private Set<WeakReference<OnDownloadListener>> mListeners=new LinkedHashSet<>();
+    private Set<WeakReference<OnDownloadListener>> mListeners = new LinkedHashSet<>();
     private String mDownloadPath;
 
 
     public DownloadTask(DownloadInfo info, String downloadPath, OnDownloadListener onDownloadListener) {
         mClient = new OkHttpClient.Builder().build();
         mDownloadInfo = info;
-        mListeners.add(onDownloadListener);
+        mListeners.add(new WeakReference<OnDownloadListener>(onDownloadListener));
         mDownloadPath = downloadPath;
     }
 
     public void addListener(OnDownloadListener listener){
-        mListeners.add(listener);
+        mListeners.add(new WeakReference<OnDownloadListener>(listener));
     }
 
     @Override
@@ -62,7 +61,7 @@ public class DownloadTask implements Runnable, OnDownloadListener{
                         outputStream.write(buf, 0, len);
                         sum += len;
                         int progress = (int) (sum/total);
-                      onProgress(progress);
+                        onProgress(progress);
                     }
                     // 下载完成
                     outputStream.close();
@@ -80,28 +79,46 @@ public class DownloadTask implements Runnable, OnDownloadListener{
 
     @Override
     public void onFailed() {
-        for (OnDownloadListener listener:mListeners) {
-            listener.onFailed();
+        for (WeakReference<OnDownloadListener> listener : mListeners) {
+            if (listener.get() != null) {
+                listener.get().onFailed();
+            }
         }
     }
 
     @Override
     public void onStart() {
-
+        for (WeakReference<OnDownloadListener> listener : mListeners) {
+            if (listener.get() != null) {
+                listener.get().onStart();
+            }
+        }
     }
 
     @Override
     public void onPause() {
-
+        for (WeakReference<OnDownloadListener> listener : mListeners) {
+            if (listener.get() != null) {
+                listener.get().onPause();
+            }
+        }
     }
 
     @Override
     public void onProgress(int progress) {
-
+        for (WeakReference<OnDownloadListener> listener : mListeners) {
+            if (listener.get() != null) {
+                listener.get().onProgress(progress);
+            }
+        }
     }
 
     @Override
     public void onFinished(Advertise advertise) {
-
+        for (WeakReference<OnDownloadListener> listener : mListeners) {
+            if (listener.get() != null) {
+                listener.get().onFinished(advertise);
+            }
+        }
     }
 }
