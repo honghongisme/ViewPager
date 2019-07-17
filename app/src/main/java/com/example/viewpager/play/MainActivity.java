@@ -8,7 +8,6 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -194,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
         String path = mUrls.get(pageBean.getPath());
         if (path != null) { // 下载完成
             mManager.setNetworkUri(path);
-            mManager.setStatusCallback(new VideoStatusCallback() {
+            mManager.addStatusCallback(new VideoStatusCallback() {
                 @Override
                 public void onPrepared() {
                     mManager.start();

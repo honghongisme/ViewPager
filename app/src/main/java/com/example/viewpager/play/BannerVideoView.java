@@ -14,10 +14,6 @@ public class BannerVideoView extends VideoView implements IVideoAbleView{
         initListener();
     }
 
-    public void setVideoStatusCallback(VideoStatusCallback callback) {
-        this.mCallback = callback;
-    }
-
     private void initListener() {
         setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
@@ -46,5 +42,16 @@ public class BannerVideoView extends VideoView implements IVideoAbleView{
     public View getView() {
         return this;
     }
+
+    @Override
+    public void stop() {
+        stopPlayback();
+    }
+
+    @Override
+    public void addStatusCallback(VideoStatusCallback callback) {
+        this.mCallback = callback;
+    }
+
 
 }

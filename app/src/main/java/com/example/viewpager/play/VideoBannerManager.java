@@ -3,6 +3,7 @@ package com.example.viewpager.play;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.Uri;
+import android.view.View;
 import android.view.ViewGroup;
 
 
@@ -11,7 +12,7 @@ public class VideoBannerManager {
     @SuppressLint("StaticFieldLeak")
     private static VideoBannerManager mInstance;
     private Context mContext;
-    private BannerVideoView mView;
+    private IVideoAbleView mView;
 
     private VideoBannerManager(Context context) {
         mContext = context.getApplicationContext();
@@ -51,16 +52,16 @@ public class VideoBannerManager {
         }
     }
 
-    public void setStatusCallback(VideoStatusCallback callback) {
+    public void addStatusCallback(VideoStatusCallback callback) {
         if (mView != null) {
-            mView.setVideoStatusCallback(callback);
+            mView.addStatusCallback(callback);
         }
     }
 
     private void recycleView() {
-        if (mView != null && mView.getParent() != null) {
-            ViewGroup parent = (ViewGroup) mView.getParent();
-            parent.removeView(mView);
+        if (mView != null && mView.getView().getParent() != null) {
+            ViewGroup parent = (ViewGroup) mView.getView().getParent();
+            parent.removeView((View) mView);
         }
     }
 
@@ -75,7 +76,7 @@ public class VideoBannerManager {
     }
 
     public void pause() {
-        if (mView != null && mView.canPause()) {
+        if (mView != null) {
             mView.pause();
         }
     }
@@ -101,7 +102,7 @@ public class VideoBannerManager {
 
     public void stop() {
         if (mView != null) {
-            mView.stopPlayback();
+            mView.stop();
         }
     }
 
