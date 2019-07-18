@@ -31,7 +31,7 @@ public class VideoBannerManager {
 
     public IVideoAbleView getView() {
         if (mView == null) {
-            mView = new BannerVideoView(mContext);
+            mView = new BannerTextureView(mContext);
         }else {
             recycleView();
         }
