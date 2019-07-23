@@ -44,7 +44,9 @@ public class BannerTextureView extends TextureView implements IVideoAbleView, Te
         mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
-                mCallback.onComplete();
+                if (mCallback != null) {
+                    mCallback.onComplete();
+                }
             }
         });
     }

@@ -41,4 +41,13 @@ public class FileUtil {
         }
         return file.getAbsolutePath();
     }
+
+    public static long getFileLength(String path) {
+        File file = new File(path);
+        if (file.exists()) {
+            System.out.println("文件长度 = " + file.length());
+            return file.length();
+        }
+        return 0;
+    }
 }

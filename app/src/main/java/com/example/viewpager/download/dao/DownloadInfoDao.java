@@ -17,7 +17,6 @@ public class DownloadInfoDao {
     public static final String TABLE_NAME = "video_download_info";
     public static final String DOWNLOAD_URL = "url";
     public static final String DOWNLOAD_STATE = "state";
-    public static final String DOWNLOAD_PROGRESS = "progress";
     public static final String DOWNLOAD_PATH = "path";
 
     private SQLiteDatabase mSQLiteDatabase;
@@ -33,20 +32,17 @@ public class DownloadInfoDao {
     }
 
     public List<DownloadInfo> queryDownloadInfo(Set<String> urlList) {
-        String sql = "select " + DOWNLOAD_URL + ", " + DOWNLOAD_STATE + ", " + DOWNLOAD_PROGRESS + ", " + DOWNLOAD_PATH + " from " + TABLE_NAME;
+        String sql = "select " + DOWNLOAD_URL + ", " + DOWNLOAD_STATE +  ", " + DOWNLOAD_PATH + " from " + TABLE_NAME;
         Cursor cursor = mSQLiteDatabase.rawQuery(sql, null);
         List<DownloadInfo> list = new ArrayList<>();
         for (String url : urlList) {
-            System.out.println("url " + url);
             DownloadInfo info = new DownloadInfo();
             cursor.moveToPosition(-1);
             while (cursor.moveToNext()) {
                 String u = cursor.getString(cursor.getColumnIndex(DOWNLOAD_URL));
-                System.out.println("数据库里url " + u);
                 if (u.equals(url)) { // url匹配 获取数据
                     info.setUrl(u);
                     info.setPath(cursor.getString(cursor.getColumnIndex(DOWNLOAD_PATH)));
-                    info.setProgress(cursor.getLong(cursor.getColumnIndex(DOWNLOAD_PROGRESS)));
                     info.setState(cursor.getInt(cursor.getColumnIndex(DOWNLOAD_STATE)));
                     break;
                 }
@@ -54,14 +50,18 @@ public class DownloadInfoDao {
             info.setUrl(url);
             list.add(info);
         }
+        System.out.println("数据库：\n" + list);
         cursor.close();
         return list;
     }
 
-    public void updateDownloadInfoByUrl(DownloadInfo info) {
-        String sql = "delete from " + TABLE_NAME + " where " + DOWNLOAD_URL  + " = '" + info.getUrl() + "'";
+    public void addDownloadInfo(DownloadInfo info) {
+        String sql = "insert into " + TABLE_NAME + " values('" + info.getUrl() + "', " + info.getState() + ", '" + info.getPath() + "')";
         mSQLiteDatabase.execSQL(sql);
-        sql = "insert into " + TABLE_NAME + " values('" + info.getUrl() + "', " + info.getState() + ", " + info.getProgress() + ", '" + info.getPath() + "')";
+    }
+
+    public void updateDownloadInfoStatus(DownloadInfo info) {
+        String sql = "update " + TABLE_NAME + " set " + DOWNLOAD_STATE + " = " + info.getState() + " where " + DOWNLOAD_URL + " = '" + info.getUrl() + "'";
         mSQLiteDatabase.execSQL(sql);
     }
 

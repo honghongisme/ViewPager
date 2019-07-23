@@ -5,8 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -21,12 +23,14 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements MainContract.View{
 
-    private static final int SWITCH_TO_NEXT = 0;
+    private static final int SWITCH_TO_NEXT_PAGE = 0;
+    private static final int VIDEO_ADD_PLAY = 3;
     private static final int IMAGE_SHOW_TIME = 3000;
 
     public static final int DATA_TYPE_IMAGE = 1;
     public static final int DATA_TYPE_VIDEO = 2;
     public static final String[] ADVERTISE_URL = {"https://mp4.vjshi.com/2018-04-07/66101cfce535738b4aab42d669815423.mp4",
+            "https://mp4.vjshi.com/2019-05-25/30a9d93f1ca93080845647213f9437ce.mp4",
     "https://mp4.vjshi.com/2018-10-14/c1493d464e6c91401172449c068b530a.mp4"};
 
     private ViewPager mViewPager;
@@ -46,9 +50,11 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
-                case SWITCH_TO_NEXT:
+                case SWITCH_TO_NEXT_PAGE:
                     switchNext();
                     break;
+                case VIDEO_ADD_PLAY:
+
                 default:
             }
         }
@@ -75,17 +81,20 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
         PageBean pageBean1 = new PageBean("image1", DATA_TYPE_IMAGE);
         PageBean pageBean2 = new PageBean(ADVERTISE_URL[0], DATA_TYPE_VIDEO);
         PageBean pageBean3 = new PageBean(ADVERTISE_URL[1], DATA_TYPE_VIDEO);
-        PageBean pageBean4 = new PageBean("image2", DATA_TYPE_IMAGE);
+        PageBean pageBean4 = new PageBean(ADVERTISE_URL[2], DATA_TYPE_VIDEO);
+        PageBean pageBean5 = new PageBean("image2", DATA_TYPE_IMAGE);
 
         mData = new ArrayList<>();
         mData.add(pageBean1);
         mData.add(pageBean2);
         mData.add(pageBean3);
         mData.add(pageBean4);
+        mData.add(pageBean5);
 
         mUrls = new LinkedHashMap<>();
         mUrls.put(ADVERTISE_URL[0], null);
         mUrls.put(ADVERTISE_URL[1], null);
+        mUrls.put(ADVERTISE_URL[2], null);
     }
 
     /**
@@ -105,6 +114,10 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
         mUrls.put(advertise.getUrl(), advertise.getPath());
         PageBean pageBean = mData.get(mViewPager.getCurrentItem());
         // video页 && 新下载好的广告是当前页的
+        System.out.println("---------------------------- addPlay -----------------------------");
+        System.out.println("新下载好的广告 == " + advertise.getUrl());
+        System.out.println("当前等待播放的广告 == " + pageBean.getPath());
+        System.out.println("pageBean.getType() == DATA_TYPE_VIDEO == " + (pageBean.getType() == DATA_TYPE_VIDEO));
         if (pageBean.getType() == DATA_TYPE_VIDEO && advertise.getUrl().equals(pageBean.getPath())) {
             playCurrentVideo();
         }
@@ -162,7 +175,7 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
             if (mManager.isExistView()) {
                 mManager.stop();
             }
-            mHandler.sendEmptyMessageDelayed(SWITCH_TO_NEXT, IMAGE_SHOW_TIME);
+            mHandler.sendEmptyMessageDelayed(SWITCH_TO_NEXT_PAGE, IMAGE_SHOW_TIME);
         } else if (pageBean.getType() == DATA_TYPE_VIDEO) {
             playCurrentVideo();
         }
@@ -184,12 +197,12 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
                 return true;
             }
         });*/
-        FrameLayout videoContainer = view.findViewById(R.id.video_container);
+        final FrameLayout videoContainer = view.findViewById(R.id.video_container);
         final ImageView imageView = view.findViewById(R.id.image);
         if (imageView.getVisibility() == View.INVISIBLE) {
             imageView.setVisibility(View.VISIBLE);
         }
-        IVideoAbleView videoView = mManager.getView();
+        final IVideoAbleView videoView = mManager.getView();
         String path = mUrls.get(pageBean.getPath());
         if (path != null) { // 下载完成
             mManager.setNetworkUri(path);
@@ -220,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
                 public void onComplete() {
                     System.out.println("onComplete");
                     imageView.setVisibility(View.VISIBLE);
-                    mHandler.sendEmptyMessage(SWITCH_TO_NEXT);
+                    mHandler.sendEmptyMessage(SWITCH_TO_NEXT_PAGE);
                 }
 
                 @Override
@@ -228,8 +241,17 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
                     System.out.println("onRelease");
                 }
             });
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
-            videoContainer.addView((View) videoView, layoutParams);
+            final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
+            if ( Looper.myLooper() == Looper.getMainLooper()) {
+                videoContainer.addView((View) videoView, layoutParams);
+            } else {
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        videoContainer.addView((View) videoView, layoutParams);
+                    }
+                });
+            }
         }
     }
 
@@ -243,6 +265,7 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
             }
         });
     }
+
 
     @Override
     protected void onStop() {
