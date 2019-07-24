@@ -1,5 +1,6 @@
 package com.example.viewpager.download;
 
+import com.example.viewpager.download.dao.DownloadInfoDao;
 import com.example.viewpager.download.entity.Advertise;
 import com.example.viewpager.download.entity.DownloadInfo;
 
@@ -26,9 +27,11 @@ public class DownloadTask implements Runnable, OnDownloadListener{
     private OkHttpClient mClient;
     private DownloadInfo mDownloadInfo;
     private Set<WeakReference<OnDownloadListener>> mListeners = new LinkedHashSet<>();
+    private DownloadInfoDao mDAO;
 
-    public DownloadTask(DownloadInfo info, OnDownloadListener onDownloadListener) {
-        mClient = new OkHttpClient.Builder().build();
+    public DownloadTask(OkHttpClient client, DownloadInfoDao dao, DownloadInfo info, OnDownloadListener onDownloadListener) {
+        mClient = client;
+        mDAO = dao;
         mDownloadInfo = info;
         mListeners.add(new WeakReference<OnDownloadListener>(onDownloadListener));
     }
@@ -62,7 +65,6 @@ public class DownloadTask implements Runnable, OnDownloadListener{
                         System.out.println("普通下载 : " + mDownloadInfo);
                         normalDownload(response.body());
                     }
-
                 }
             }
         });
@@ -123,6 +125,8 @@ public class DownloadTask implements Runnable, OnDownloadListener{
             while ((len = inputStream.read(buffer)) != -1) {
                 file.write(buffer, 0, len);
                 sum = sum + len;
+                mDownloadInfo.setProgress(sum);
+                mDAO.updateDownloadInfoProgress(mDownloadInfo);
                 // 两个long类型的数值相除，结果会自动取整
                 int progress = (int) (sum * 1.0 / total * 100);
                 onProgress(progress);
@@ -134,6 +138,7 @@ public class DownloadTask implements Runnable, OnDownloadListener{
             file.close();
             inputStream.close();
             mDownloadInfo.setState(1);
+            mDAO.updateDownloadInfoStatus(mDownloadInfo);
             Advertise advertise = new Advertise();
             advertise.setUrl(mDownloadInfo.getUrl());
             advertise.setPath(mDownloadInfo.getPath());

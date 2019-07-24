@@ -12,8 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.OkHttpClient;
+
 import static com.example.viewpager.download.util.FileUtil.deleteFiles;
-import static com.example.viewpager.download.util.FileUtil.getAbsolutePath;
+import static com.example.viewpager.download.util.FileUtil.createFile;
 
 public class DownloadManager {
 
@@ -22,10 +24,12 @@ public class DownloadManager {
     @SuppressLint("StaticFieldLeak")
     private static Context mContext;
     private String mDownloadDirPath;
+    private OkHttpClient mClient;
 
     private DownloadManager() {
         mDownloadTasks = Collections.synchronizedMap( new HashMap<String, DownloadTask>());
         mDAO = new DownloadInfoDao(mContext, null);
+        mClient = new OkHttpClient.Builder().build();
     }
 
     public static DownloadManager getInstance(Context context) {
@@ -49,16 +53,15 @@ public class DownloadManager {
 
     private void download(final DownloadInfo info, final OnDownloadListener listener) {
         if (info.getPath() == null) { // 新的下载项
-            String downloadPath = getAbsolutePath(mDownloadDirPath, info.getUrl());
+            String downloadPath = createFile(mDownloadDirPath, info.getUrl());
             info.setPath(downloadPath);
             mDAO.addDownloadInfo(info);
         }
-        DownloadTask task = new DownloadTask(info, listener){
+        DownloadTask task = new DownloadTask(mClient, mDAO, info, listener){
             @Override
             public void onFinished(Advertise advertise) {
                 super.onFinished(advertise);
                 System.out.println("下载完成:   " + info);
-                mDAO.updateDownloadInfoStatus(info);
                 mDownloadTasks.remove(info.getUrl());
             }
         };

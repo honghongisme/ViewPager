@@ -25,8 +25,13 @@ public class FileUtil {
         }
     }
 
-    public static String getAbsolutePath(String dirPath, String url) {
-        File file = new File(dirPath + "/" + getFileName(url));
+    public static String createFile(String dirPath, String url) {
+        String path = dirPath + "/" + getFileName(url);
+        return createFile(path);
+    }
+
+    public static String createFile(String path) {
+        File file = new File(path);
         //  创建目录
         if (!file.getParentFile().exists()) {
             file.getParentFile().mkdirs();
@@ -49,5 +54,10 @@ public class FileUtil {
             return file.length();
         }
         return 0;
+    }
+
+    public static boolean isExistFile(String path) {
+        File file = new File(path);
+        return file.exists();
     }
 }

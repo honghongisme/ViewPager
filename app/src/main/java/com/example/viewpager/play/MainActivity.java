@@ -24,7 +24,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements MainContract.View{
 
     private static final int SWITCH_TO_NEXT_PAGE = 0;
-    private static final int VIDEO_ADD_PLAY = 3;
+    private static final int VIDEO_PLAY = 3;
     private static final int IMAGE_SHOW_TIME = 3000;
 
     public static final int DATA_TYPE_IMAGE = 1;
@@ -53,8 +53,8 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
                 case SWITCH_TO_NEXT_PAGE:
                     switchNext();
                     break;
-                case VIDEO_ADD_PLAY:
-
+                case VIDEO_PLAY:
+                    playCurrentVideo();
                 default:
             }
         }
@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
         System.out.println("当前等待播放的广告 == " + pageBean.getPath());
         System.out.println("pageBean.getType() == DATA_TYPE_VIDEO == " + (pageBean.getType() == DATA_TYPE_VIDEO));
         if (pageBean.getType() == DATA_TYPE_VIDEO && advertise.getUrl().equals(pageBean.getPath())) {
-            playCurrentVideo();
+            mHandler.sendEmptyMessage(VIDEO_PLAY);
         }
     }
 
@@ -242,16 +242,7 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
                 }
             });
             final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
-            if ( Looper.myLooper() == Looper.getMainLooper()) {
-                videoContainer.addView((View) videoView, layoutParams);
-            } else {
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        videoContainer.addView((View) videoView, layoutParams);
-                    }
-                });
-            }
+            videoContainer.addView((View) videoView, layoutParams);
         }
     }
 

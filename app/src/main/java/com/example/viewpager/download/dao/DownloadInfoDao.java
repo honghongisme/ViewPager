@@ -18,6 +18,7 @@ public class DownloadInfoDao {
     public static final String DOWNLOAD_URL = "url";
     public static final String DOWNLOAD_STATE = "state";
     public static final String DOWNLOAD_PATH = "path";
+    public static final String DOWNLOAD_PROGRESS = "progress";
 
     private SQLiteDatabase mSQLiteDatabase;
 
@@ -32,7 +33,7 @@ public class DownloadInfoDao {
     }
 
     public List<DownloadInfo> queryDownloadInfo(Set<String> urlList) {
-        String sql = "select " + DOWNLOAD_URL + ", " + DOWNLOAD_STATE +  ", " + DOWNLOAD_PATH + " from " + TABLE_NAME;
+        String sql = "select " + DOWNLOAD_URL + ", " + DOWNLOAD_STATE +  ", " + DOWNLOAD_PROGRESS + ", " + DOWNLOAD_PATH + " from " + TABLE_NAME;
         Cursor cursor = mSQLiteDatabase.rawQuery(sql, null);
         List<DownloadInfo> list = new ArrayList<>();
         for (String url : urlList) {
@@ -44,6 +45,7 @@ public class DownloadInfoDao {
                     info.setUrl(u);
                     info.setPath(cursor.getString(cursor.getColumnIndex(DOWNLOAD_PATH)));
                     info.setState(cursor.getInt(cursor.getColumnIndex(DOWNLOAD_STATE)));
+                    info.setProgress(cursor.getLong(cursor.getColumnIndex(DOWNLOAD_PROGRESS)));
                     break;
                 }
             }
@@ -56,12 +58,17 @@ public class DownloadInfoDao {
     }
 
     public void addDownloadInfo(DownloadInfo info) {
-        String sql = "insert into " + TABLE_NAME + " values('" + info.getUrl() + "', " + info.getState() + ", '" + info.getPath() + "')";
+        String sql = "insert into " + TABLE_NAME + "(" + DOWNLOAD_URL + ", " + DOWNLOAD_PATH + ") " + " values('" + info.getUrl() + "', '" + info.getPath() + "')";
         mSQLiteDatabase.execSQL(sql);
     }
 
     public void updateDownloadInfoStatus(DownloadInfo info) {
         String sql = "update " + TABLE_NAME + " set " + DOWNLOAD_STATE + " = " + info.getState() + " where " + DOWNLOAD_URL + " = '" + info.getUrl() + "'";
+        mSQLiteDatabase.execSQL(sql);
+    }
+
+    public void updateDownloadInfoProgress(DownloadInfo info) {
+        String sql = "update " + TABLE_NAME + " set " + DOWNLOAD_PROGRESS + " = " + info.getProgress() + " where " + DOWNLOAD_URL + " = '" + info.getUrl() + "'";
         mSQLiteDatabase.execSQL(sql);
     }
 
