@@ -83,8 +83,8 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
         PageBean pageBean5 = new PageBean("image2", DATA_TYPE_IMAGE);
 
         mData = new ArrayList<>();
-        mData.add(pageBean1);
         mData.add(pageBean2);
+        mData.add(pageBean1);
         mData.add(pageBean3);
         mData.add(pageBean4);
         mData.add(pageBean5);
@@ -183,8 +183,8 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
      * 播放video
      */
     public void playCurrentVideo() {
-        View view = mViewPager.findViewWithTag(mViewPager.getCurrentItem());
-        PageBean pageBean = mData.get(mViewPager.getCurrentItem());
+        int currentItem = mViewPager.getCurrentItem();
+        View view = mViewPager.findViewWithTag(currentItem);
    /*     view.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -195,52 +195,55 @@ public class MainActivity extends AppCompatActivity implements MainContract.View
                 return true;
             }
         });*/
-        final FrameLayout videoContainer = view.findViewById(R.id.video_container);
-        final ImageView imageView = view.findViewById(R.id.image);
-        if (imageView.getVisibility() == View.INVISIBLE) {
-            imageView.setVisibility(View.VISIBLE);
-        }
-        final IVideoAbleView videoView = mManager.getView();
-        String path = mUrls.get(pageBean.getPath());
-        if (path != null) { // 下载完成
-            mManager.setNetworkUri(path);
-            mManager.addStatusCallback(new VideoStatusCallback() {
-                @Override
-                public void onPrepared() {
-                    mManager.start();
-                    System.out.println("onPrepared");
-                }
+        if (view != null) {
+            final FrameLayout videoContainer = view.findViewById(R.id.video_container);
+            final ImageView imageView = view.findViewById(R.id.image);
+            if (imageView.getVisibility() == View.INVISIBLE) {
+                imageView.setVisibility(View.VISIBLE);
+            }
+            final IVideoAbleView videoView = mManager.getView();
+            PageBean pageBean = mData.get(currentItem);
+            String path = mUrls.get(pageBean.getPath());
+            if (path != null) { // 下载完成
+                mManager.setNetworkUri(path);
+                mManager.addStatusCallback(new VideoStatusCallback() {
+                    @Override
+                    public void onPrepared() {
+                        mManager.start();
+                        System.out.println("onPrepared");
+                    }
 
-                @Override
-                public void onRender() {
-                    imageView.setVisibility(View.INVISIBLE);
-                    System.out.println("onRender");
-                }
+                    @Override
+                    public void onRender() {
+                        imageView.setVisibility(View.INVISIBLE);
+                        System.out.println("onRender");
+                    }
 
-                @Override
-                public void onPlay() {
-                    System.out.println("onPlay");
-                }
+                    @Override
+                    public void onPlay() {
+                        System.out.println("onPlay");
+                    }
 
-                @Override
-                public void onProgress(int progress) {
-                    System.out.println("onProgress");
-                }
+                    @Override
+                    public void onProgress(int progress) {
+                        System.out.println("onProgress");
+                    }
 
-                @Override
-                public void onComplete() {
-                    System.out.println("onComplete");
-                    imageView.setVisibility(View.VISIBLE);
-                    mHandler.sendEmptyMessage(SWITCH_TO_NEXT_PAGE);
-                }
+                    @Override
+                    public void onComplete() {
+                        System.out.println("onComplete");
+                        imageView.setVisibility(View.VISIBLE);
+                        mHandler.sendEmptyMessage(SWITCH_TO_NEXT_PAGE);
+                    }
 
-                @Override
-                public void onRelease() {
-                    System.out.println("onRelease");
-                }
-            });
-            final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
-            videoContainer.addView((View) videoView, layoutParams);
+                    @Override
+                    public void onRelease() {
+                        System.out.println("onRelease");
+                    }
+                });
+                final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
+                videoContainer.addView((View) videoView, layoutParams);
+            }
         }
     }
 
