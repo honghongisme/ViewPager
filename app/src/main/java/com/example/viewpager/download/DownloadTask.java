@@ -83,13 +83,16 @@ public class DownloadTask implements Runnable, OnDownloadListener{
             while ((len = inputStream.read(buf)) != -1) {
                 outputStream.write(buf, 0, len);
                 sum += len;
-                int progress = (int) (sum/total);
+                mDownloadInfo.setProgress(sum);
+                mDAO.updateDownloadInfoProgress(mDownloadInfo);
+                int progress = (int) (sum * 1.0 / total * 100);
                 onProgress(progress);
             }
             // 下载完成
             outputStream.close();
             inputStream.close();
             mDownloadInfo.setState(1);
+            mDAO.updateDownloadInfoStatus(mDownloadInfo);
             Advertise advertise = new Advertise();
             advertise.setUrl(mDownloadInfo.getUrl());
             advertise.setPath(mDownloadInfo.getPath());
@@ -112,7 +115,7 @@ public class DownloadTask implements Runnable, OnDownloadListener{
 
     }
 
-    public void breakPointDownload(ResponseBody body) {
+    private void breakPointDownload(ResponseBody body) {
         long sum = mDownloadInfo.getProgress();
         long total = body.contentLength() + sum;
         InputStream inputStream = body.byteStream();
@@ -200,11 +203,7 @@ public class DownloadTask implements Runnable, OnDownloadListener{
     @Override
     public void onFinished(Advertise advertise) {
         for (WeakReference<OnDownloadListener> listener : mListeners) {
-            if (listener.get() == null) {
-                System.out.println("listener.get()是空的 ");
-            }
             if (listener.get() != null) {
-                System.out.println("listener.get().onFinished(advertise);");
                 listener.get().onFinished(advertise);
             }
         }
